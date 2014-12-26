@@ -3,7 +3,8 @@
 #define NUMPIXELS 24
 #define PIN 8
 
-int techno_delay = 1000000;
+
+int techno_delay = 200000;
 
 enum pixel_macro{
   NONE      = 0,
@@ -18,14 +19,24 @@ typedef struct {
 } NeoPixel;
 
 NeoPixel pixel_state[NUMPIXELS];
+unsigned long bands[NUMPIXELS];
+int pixel_offset = 0;
 
-void techno_turtle(){
-  for (int x=0; x<24; x++) {
-    if (random(3) == 0) {
-      pixel_state[x].color = random(0xffffff);
+void new_colors() {
+  for (int x=0; x<NUMPIXELS; x++) {
+    if (random(4) == 0) {
+      bands[x] = random(0xffffff);
     } else {
-      pixel_state[x].color = 0;
+      bands[x] = 0;
     }
+  }
+}
+
+void techno_turtle() {
+  pixel_offset = (pixel_offset + 1) % NUMPIXELS;
+  
+  for (int x=0; x<NUMPIXELS; x++) {
+    pixel_state[x].color = bands[(x + pixel_offset) % NUMPIXELS];
   }
   update_pixels();
   delay_us(techno_delay);
@@ -61,6 +72,7 @@ void update_pixels(){
 
 void setup(){
   pinMode(PIN, OUTPUT);
+  new_colors();
 }
 
 void loop() {

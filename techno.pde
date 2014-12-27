@@ -28,6 +28,27 @@ typedef struct {
 } 
 HSL;
 
+// pressed means the button is down but last time it was up
+// down means the button is down
+// released means the button is up but last time it was down
+typedef struct {
+  boolean amber_down;
+  boolean amber_pressed;
+  boolean amber_released;
+  boolean green_down;
+  boolean green_pressed;
+  boolean green_released;
+  boolean blue_down;
+  boolean blue_pressed;
+  boolean blue_released;
+  boolean shell_down;
+  boolean shell_pressed;
+  boolean shell_released;
+}
+KEYS;
+
+KEYS keys;
+
 typedef struct {
   uint32 birth_ms;
   uint32 lifespan_ms;
@@ -138,27 +159,51 @@ void setup(){
     init_fire(p, 0);
   }
   tail_wiggle();
+  keys.green_down = false;
+  keys.amber_down = false;
+  keys.blue_down = false;
+  keys.shell_down = false;
+}
+
+void update_keys() {
+  boolean green = digitalRead(buttonGREEN) == HIGH;
+  boolean blue = digitalRead(buttonBLUE) == HIGH;
+  boolean amber = digitalRead(buttonAMBER) == HIGH;
+  boolean shell = digitalRead(buttonSHELL) == HIGH;
+
+  keys.green_pressed = green && !keys.green_down;
+  keys.green_released = !green && keys.green_down;
+  keys.green_down = green;
+
+  keys.blue_pressed = blue && !keys.blue_down;
+  keys.blue_released = !blue && keys.blue_down;
+  keys.blue_down = blue;
+
+  keys.amber_pressed = amber && !keys.amber_down;
+  keys.amber_released = !amber && keys.amber_down;
+  keys.amber_down = amber;
+
+  keys.shell_pressed = shell && !keys.shell_down;
+  keys.shell_released = !shell && keys.shell_down;
+  keys.shell_down = shell;
 }
 
 void loop() {
   uint32 ts = millis();
+  update_keys();
 
-  if (digitalRead(buttonSHELL) == HIGH) {
+  if (keys.shell_down) {
     tail_wiggle();
   }
 
-  if (digitalRead(buttonBLUE) == HIGH) {
-    for (int p=0; p<NUMPIXELS; p++) {
-      init_fire(p, ts);
-    }
+  if (keys.blue_pressed) {
+    for (int p=0; p<NUMPIXELS; p++) init_fire(p, ts);
   }
 
-  if (digitalRead(buttonAMBER) == HIGH) {
-    while (digitalRead(buttonAMBER) == HIGH) delay(10); // FIXME(ja): delay breaks loop logic
+  if (keys.blue_released) {
     num_fires = constrain(num_fires+1, 1, 24);
   }
-  if (digitalRead(buttonGREEN) == HIGH) {
-    while (digitalRead(buttonGREEN) == HIGH) delay(10); // FIXME(ja): delay breaks loop logic
+  if (keys.green_released) {
     num_fires = constrain(num_fires-1, 1, 24);
   }
 
@@ -196,6 +241,4 @@ uint32 HueToRgb(float p, float q, float t) {
   if (t < 2.0f / 3.0f) return uint32((p + (q - p) * (2.0f / 3.0f - t) * 6.0f) * 255.0f);
   return uint32(p * 255.0f);
 }
-
-
 

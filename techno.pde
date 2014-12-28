@@ -8,6 +8,12 @@ original commit is by Shaun Meehan. APRGL
 
 #include <Servo.h>
 
+// tool to flash without hitting the reset button
+// http://forums.leaflabs.com/topic.php?id=74283#post-105284
+#define SCB_AIRCR ((volatile uint32*) (0xE000ED00 + 0x0C))
+#define SCB_AIRCR_SYSRESETREQ (1 << 2)
+#define SCB_AIRCR_RESET ((0x05FA0000) | SCB_AIRCR_SYSRESETREQ)
+
 #define PIN_PORT GPIOA
 #define PIN_BIT 10
 #define NUMPIXELS 24
@@ -18,8 +24,8 @@ original commit is by Shaun Meehan. APRGL
 #define buttonBLUE 14
 #define buttonSHELL 4
 
-#define MIN_AGE 2500
-#define AGE_MORE 2500
+#define MIN_AGE 5000
+#define AGE_MORE 5000
 
 typedef struct {
   float hue;
@@ -109,12 +115,10 @@ void draw_fires() {
   systick_disable();
   noInterrupts();
   for (int i=0; i<NUMPIXELS; i++){
-    if (i < num_fires) {
+    if (i < num_fires)
       color = fires[i].rgb;
-    } 
-    else {
+    else 
       color = 0;
-    }
 
     // write color bit by bit to the gpio
     for (uint32 mask=0x800000; mask; mask=mask>>1) {
@@ -155,14 +159,18 @@ void setup(){
   pinMode(buttonSHELL, INPUT_PULLDOWN);
 
   tail.attach(7);
-  for (int p=0; p<NUMPIXELS; p++) {
-    init_fire(p, 0);
-  }
+  init_all_fires();
   tail_wiggle();
+
   keys.green_down = false;
   keys.amber_down = false;
   keys.blue_down = false;
   keys.shell_down = false;
+}
+
+void init_all_fires() {
+  for (int p=0; p<NUMPIXELS; p++) 
+    init_fire(p, 0);
 }
 
 void update_keys() {
@@ -192,20 +200,17 @@ void loop() {
   uint32 ts = millis();
   update_keys();
 
-  if (keys.shell_down) {
-    tail_wiggle();
-  }
+  if (keys.shell_released) tail_wiggle();
 
-  if (keys.blue_pressed) {
-    for (int p=0; p<NUMPIXELS; p++) init_fire(p, ts);
-  }
+  if (keys.blue_pressed) init_all_fires();
+  if (keys.green_released) num_fires++;
+  if (keys.amber_released) num_fires--;
 
-  if (keys.blue_released) {
-    num_fires = constrain(num_fires+1, 1, 24);
-  }
-  if (keys.green_released) {
-    num_fires = constrain(num_fires-1, 1, 24);
-  }
+  if (keys.shell_down && keys.green_down) {
+    *(SCB_AIRCR) = SCB_AIRCR_RESET;
+  } 
+
+  num_fires = constrain(num_fires, 1, 24);
 
   techno_turtle(ts);
 

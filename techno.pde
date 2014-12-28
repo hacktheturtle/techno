@@ -53,6 +53,13 @@ typedef struct {
 }
 KEYS;
 
+typedef struct {
+  uint32 tail_loc; // where the tail is
+  uint32 tail_ms;  // when the tail is available
+}
+APPENDAGES;
+
+APPENDAGES appendages;
 KEYS keys;
 
 typedef struct {
@@ -110,7 +117,6 @@ void techno_turtle(uint32 ts) {
  Needs blanking time.*/
 void draw_fires() {
   uint32 color;
-  float scale;
 
   systick_disable();
   noInterrupts();
@@ -143,12 +149,20 @@ void draw_fires() {
   interrupts();
 }
 
-void tail_wiggle() {
-  // FIXME(ja): delays break the loop logic...
-  tail.write(80);
-  delay(100);
-  tail.write(140);
-  delay(140);
+void tail_wiggle(uint32 ts) {
+  if (ts < appendages.tail_ms) 
+    return;
+
+  if (appendages.tail_loc == 80) {
+    appendages.tail_loc = 140;
+    appendages.tail_ms = ts + 140;
+  }
+  else {
+    appendages.tail_loc = 80;
+    appendages.tail_ms = ts + 100;
+  }
+
+  tail.write(appendages.tail_loc);
 }
 
 void setup(){
@@ -160,7 +174,11 @@ void setup(){
 
   tail.attach(7);
   init_all_fires();
-  tail_wiggle();
+
+  appendages.tail_loc = 0;
+  appendages.tail_ms = 0;
+
+  tail_wiggle(0);
 
   keys.green_down = false;
   keys.amber_down = false;
@@ -200,7 +218,7 @@ void loop() {
   uint32 ts = millis();
   update_keys();
 
-  if (keys.shell_released) tail_wiggle();
+  if (keys.shell_down) tail_wiggle(ts);
 
   if (keys.blue_pressed) init_all_fires();
   if (keys.green_released) num_fires++;

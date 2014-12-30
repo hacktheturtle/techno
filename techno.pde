@@ -77,6 +77,9 @@ int loop_delay_ms = 10;
 
 Servo tail;
 
+uint32 pixels[NUMPIXELS];
+boolean pixels_dirty;
+
 void init_fire(int p, uint32 ts) {
   fires[p].hsl.saturation = 1.0;
   fires[p].hsl.hue = float(random(1000)) / 1000.0f;
@@ -113,22 +116,36 @@ void techno_turtle(uint32 ts) {
   draw_fires();
 }
 
+void draw_fires() {
+  for (int i=0; i<NUMPIXELS; i++) {
+    if (i < num_fires) {
+      set_pixel(i, fires[i].rgb);
+    } else {
+      set_pixel(i, 0);
+    }
+  }
+}
+
+void set_pixel(int i, uint32 color) {
+  if (color != pixels[i]) {
+    pixels[i] = color;
+    pixels_dirty = true;
+  }
+}
+
 /* Used to update pixel, do not call within 50uS of returning.
  Needs blanking time.*/
-void draw_fires() {
-  uint32 color;
+void draw_pixels() {
+  if (!pixels_dirty) {
+    return;
+  }
 
   systick_disable();
   noInterrupts();
   for (int i=0; i<NUMPIXELS; i++){
-    if (i < num_fires)
-      color = fires[i].rgb;
-    else
-      color = 0;
-
     // write color bit by bit to the gpio
     for (uint32 mask=0x800000; mask; mask=mask>>1) {
-      if (color & mask) {
+      if (pixels[i] & mask) {
         gpio_write_bit(PIN_PORT, PIN_BIT, HIGH);
         gpio_write_bit(PIN_PORT, PIN_BIT, HIGH);
         gpio_write_bit(PIN_PORT, PIN_BIT, HIGH);
@@ -147,6 +164,8 @@ void draw_fires() {
   }
   systick_enable();
   interrupts();
+
+  pixels_dirty = false;
 }
 
 void tail_wiggle(uint32 ts) {
@@ -184,6 +203,11 @@ void setup(){
   keys.amber_down = false;
   keys.blue_down = false;
   keys.shell_down = false;
+
+  for (int i=0; i<NUMPIXELS; i++) {
+    set_pixel(i, 0);
+  }
+  pixels_dirty = true;
 }
 
 void init_all_fires() {
@@ -235,6 +259,7 @@ void loop() {
   num_fires = constrain(num_fires, 1, 24);
 
   techno_turtle(ts);
+  draw_pixels();
 
   delay(loop_delay_ms);
 }

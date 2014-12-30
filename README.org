@@ -102,3 +102,13 @@ how do I use
 screen is great except it goes away when turtle is re-flashed..
 
 also does the port change? ~/dev/cu.usbmodem1421~
+
+** multiple source files
+
+having everything in a single file is becoming annoying
+
+** wireless?
+
+xbee?  bluetooth?
+
+can I flash it and get Serial USB without wires?

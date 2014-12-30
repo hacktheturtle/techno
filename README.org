@@ -1,0 +1,46 @@
+#+TITLE: Hack the Turtle - Techno
+#+AUTHOR: Jesse Andrews
+#+EMAIL: anotherjesse@gmail.com
+
+What happens when you put an ARM3 processor in a kids sleeping turtle?
+Let's find out!
+
+* Verifying using MapleIDE
+
+First use the Arduino based IDE to build code and update the turtle.
+
+Load the code `techno.pde` in MapleIDE.
+
+** Configure Board
+
+Under *Tools* -> *Board* choose =LeafLabs Maple Rev3+ to Flash=
+
+** Compile Code
+
+Click the play button or hit ~ctrl-r~ to build the code.  This doesn't upload to the turtle..
+
+** Flash the turtle
+
+Click the upload button or hit ~ctrl-u~ to flash the turtle.  It will
+rebuild the code if needed, so you don't actually need to compile
+unless you are looking for compile errors.
+
+In the console you will eventually see something like:
+
+#+BEGIN_EXAMPLE
+Binary sketch size is reported above. Check it against a 108000 byte maximum.
+Loading via dfu-util
+Resetting to bootloader via DTR pulse
+
+Reset via USB Serial Failed! Did you select the serial right serial port?
+Assuming the board is in perpetual bootloader mode and continuing to attempt dfu programming...
+
+
+Searching for DFU device [1EAF:0003]...
+#+END_EXAMPLE
+
+At this point you need to find the *reset* button on the board and press it.  At which point the ide tells you:
+
+#+BEGIN_EXAMPLE
+Found it!
+#+END_EXAMPLE

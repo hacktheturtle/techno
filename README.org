@@ -2,14 +2,14 @@
 #+AUTHOR: Jesse Andrews
 #+EMAIL: anotherjesse@gmail.com
 
-What happens when you put an ARM3 processor in a kids sleeping turtle?
+What happens when you put an [[http://leaflabs.com/][ARM M3]] with sensors, servors and LEDs in a kids [[http://cloudb.com/sight/twilight-turtle-classic-mocha][twilight turtle]]?
 Let's find out!
 
-* Verifying using MapleIDE
+* Getting started using MapleIDE
 
 First use the Arduino based IDE to build code and update the turtle.
 
-Load the code `techno.pde` in MapleIDE.
+Load the code ~techno.pde~ in [[http://leaflabs.com/docs/ide.html][Maple IDE]].
 
 ** Configure Board
 
@@ -44,3 +44,61 @@ At this point you need to find the *reset* button on the board and press it.  At
 #+BEGIN_EXAMPLE
 Found it!
 #+END_EXAMPLE
+
+A few seconds later the turtle will be running your code!
+
+* Using MapleIDE only for build & flash
+
+For now we won't use a [[http://static.leaflabs.com/pub/leaflabs/maple-docs/latest/unix-toolchain.html][unix toolchain]], because it didn't work for me.
+But we can vastly improve our flow by only using the IDE to
+build/upload.
+
+** Using your editor
+
+In MapleIDE prefrences, choose *Use external editor*.
+
+Our new workflow is:
+
+1. edit code in emacs, save
+2. alt-tab to MapleIDE and press ~ctrl-u~ to compile and upload
+3. wait for the upload to start and reset the turtle (entering
+   bootload mode)
+
+** Serial
+
+Luckily the board supports [[http://leaflabs.com/docs/lang/api/serialusb.html][serial usb]] for logging!
+
+It is "/slow/" but for debugging it is very useful.
+
+To access it from my computer I use *screen*
+
+~screen /dev/cu.usbmodem1421~
+
+Then anytime my code runs ~SerialUSB.println("string here");~ You
+will see a line of text in your screen session.
+
+* Open Questions
+
+** Using unix toolchain
+
+Homebrew has dfu-util.  ~make install~ from the tutorial failed to
+flash though.
+
+** perpetual bootload mode
+
+It sucks to have press reset on the turtle to flash it.  If only my
+computer could trigger reset/flash?
+
+Right now I've made it so pressing *shell* and *green* buttons will
+cause a reset.  Which is better than flipping the turtle over and
+finding the tiny reset button on the board.
+
+** accelerometer
+
+how do I use
+
+** serial io
+
+screen is great except it goes away when turtle is re-flashed..
+
+also does the port change? ~/dev/cu.usbmodem1421~

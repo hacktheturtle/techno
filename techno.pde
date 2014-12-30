@@ -1,10 +1,10 @@
 /*
 original commit is by Shaun Meehan. APRGL
- 
- subsequent work is by Jesse Andrews - who hasn't written embedded code before...
- so please don't run this code blindedly
- 
- */
+
+subsequent work is by Jesse Andrews - who hasn't written embedded code before...
+so please don't run this code blindedly
+
+*/
 
 #include <Servo.h>
 
@@ -31,7 +31,7 @@ typedef struct {
   float hue;
   float saturation;
   float lightness;
-} 
+}
 HSL;
 
 // pressed means the button is down but last time it was up
@@ -67,7 +67,7 @@ typedef struct {
   uint32 lifespan_ms;
   HSL hsl;
   uint32 rgb;
-} 
+}
 Firework;
 
 Firework fires[NUMPIXELS];
@@ -97,7 +97,7 @@ void update_fire(int p, uint32 ts) {
   // it starts going from 100% back down to 0%.  linearly scale
   float scale = (float)(ts - fires[p].birth_ms) / (float)fires[p].lifespan_ms;
 
-  if (scale < 0.5) 
+  if (scale < 0.5)
     scale = scale * 2.0;
   else
     scale = (1.0 - scale) * 2.0;
@@ -123,7 +123,7 @@ void draw_fires() {
   for (int i=0; i<NUMPIXELS; i++){
     if (i < num_fires)
       color = fires[i].rgb;
-    else 
+    else
       color = 0;
 
     // write color bit by bit to the gpio
@@ -135,7 +135,7 @@ void draw_fires() {
         gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
         gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
         gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
-      } 
+      }
       else {
         gpio_write_bit(PIN_PORT, PIN_BIT, HIGH);
         gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
@@ -150,7 +150,7 @@ void draw_fires() {
 }
 
 void tail_wiggle(uint32 ts) {
-  if (ts < appendages.tail_ms) 
+  if (ts < appendages.tail_ms)
     return;
 
   if (appendages.tail_loc == 80) {
@@ -187,7 +187,7 @@ void setup(){
 }
 
 void init_all_fires() {
-  for (int p=0; p<NUMPIXELS; p++) 
+  for (int p=0; p<NUMPIXELS; p++)
     init_fire(p, 0);
 }
 
@@ -224,9 +224,13 @@ void loop() {
   if (keys.green_released) num_fires++;
   if (keys.amber_released) num_fires--;
 
+  if (keys.amber_pressed) {
+    SerialUSB.println("amber pressed!");
+  }
+
   if (keys.shell_down && keys.green_down) {
     *(SCB_AIRCR) = SCB_AIRCR_RESET;
-  } 
+  }
 
   num_fires = constrain(num_fires, 1, 24);
 
@@ -264,4 +268,3 @@ uint32 HueToRgb(float p, float q, float t) {
   if (t < 2.0f / 3.0f) return uint32((p + (q - p) * (2.0f / 3.0f - t) * 6.0f) * 255.0f);
   return uint32(p * 255.0f);
 }
-

@@ -7,9 +7,13 @@ Let's find out!
 
 * Getting started using MapleIDE
 
+You can [[http://static.leaflabs.com/pub/leaflabs/maple-docs/latest/maple-ide-install.html#download][download Maple IDE]] for your operating system, the install it.
+
+** Opening the code
+
 First use the Arduino based IDE to build code and update the turtle.
 
-Load the code ~techno.pde~ in [[http://leaflabs.com/docs/ide.html][Maple IDE]].
+Load the code ~techno.pde~ in the IDE
 
 ** Configure Board
 
@@ -79,12 +83,12 @@ will see a line of text in your screen session.
 
 * Open Questions
 
-** Using unix toolchain
+** TODO Using unix toolchain
 
 Homebrew has dfu-util.  ~make install~ from the tutorial failed to
 flash though.
 
-** perpetual bootload mode
+** TODO perpetual bootload mode
 
 It sucks to have press reset on the turtle to flash it.  If only my
 computer could trigger reset/flash?
@@ -93,21 +97,25 @@ Right now I've made it so pressing *shell* and *green* buttons will
 cause a reset.  Which is better than flipping the turtle over and
 finding the tiny reset button on the board.
 
-** accelerometer
+** TODO accelerometer
 
 how do I use
 
-** serial io
+** TODO serial io
 
 screen is great except it goes away when turtle is re-flashed..
 
 also does the port change? ~/dev/cu.usbmodem1421~
 
-** multiple source files
+** DONE multiple source files
+   CLOSED: [2014-12-30 Tue 21:28]
 
 having everything in a single file is becoming annoying
 
-** wireless?
+I've started splitting into .h and .pde files for use with the IDE, using
+notes from [[http://forums.leaflabs.com/topic.php?id=1408][forums]].
+
+** TODO wireless?
 
 xbee?  bluetooth?
 

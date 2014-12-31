@@ -8,31 +8,11 @@ so please don't run this code blindedly
 
 #include <Servo.h>
 
-// tool to flash without hitting the reset button
-// http://forums.leaflabs.com/topic.php?id=74283#post-105284
-#define SCB_AIRCR ((volatile uint32*) (0xE000ED00 + 0x0C))
-#define SCB_AIRCR_SYSRESETREQ (1 << 2)
-#define SCB_AIRCR_RESET ((0x05FA0000) | SCB_AIRCR_SYSRESETREQ)
-
-#define PIN_PORT GPIOA
-#define PIN_BIT 10
-#define NUMPIXELS 24
-#define PIN 8
-
-#define buttonAMBER 12
-#define buttonGREEN 13
-#define buttonBLUE 14
-#define buttonSHELL 4
+#include "turtle.h"
+#include "color.h"
 
 #define MIN_AGE 5000
 #define AGE_MORE 5000
-
-typedef struct {
-  float hue;
-  float saturation;
-  float lightness;
-}
-HSL;
 
 // pressed means the button is down but last time it was up
 // down means the button is down
@@ -56,8 +36,7 @@ KEYS;
 typedef struct {
   uint32 tail_loc; // where the tail is
   uint32 tail_ms;  // when the tail is available
-}
-APPENDAGES;
+} APPENDAGES;
 
 APPENDAGES appendages;
 KEYS keys;
@@ -67,8 +46,7 @@ typedef struct {
   uint32 lifespan_ms;
   HSL hsl;
   uint32 rgb;
-}
-Firework;
+} Firework;
 
 Firework fires[NUMPIXELS];
 
@@ -77,8 +55,6 @@ int loop_delay_ms = 10;
 
 Servo tail;
 
-uint32 pixels[NUMPIXELS];
-boolean pixels_dirty;
 
 void init_fire(int p, uint32 ts) {
   fires[p].hsl.saturation = 1.0;
@@ -126,48 +102,6 @@ void draw_fires() {
   }
 }
 
-void set_pixel(int i, uint32 color) {
-  if (color != pixels[i]) {
-    pixels[i] = color;
-    pixels_dirty = true;
-  }
-}
-
-/* Used to update pixel, do not call within 50uS of returning.
- Needs blanking time.*/
-void draw_pixels() {
-  if (!pixels_dirty) {
-    return;
-  }
-
-  systick_disable();
-  noInterrupts();
-  for (int i=0; i<NUMPIXELS; i++){
-    // write color bit by bit to the gpio
-    for (uint32 mask=0x800000; mask; mask=mask>>1) {
-      if (pixels[i] & mask) {
-        gpio_write_bit(PIN_PORT, PIN_BIT, HIGH);
-        gpio_write_bit(PIN_PORT, PIN_BIT, HIGH);
-        gpio_write_bit(PIN_PORT, PIN_BIT, HIGH);
-        gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
-        gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
-        gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
-      }
-      else {
-        gpio_write_bit(PIN_PORT, PIN_BIT, HIGH);
-        gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
-        gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
-        gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
-        gpio_write_bit(PIN_PORT, PIN_BIT, LOW);
-      }
-    }
-  }
-  systick_enable();
-  interrupts();
-
-  pixels_dirty = false;
-}
-
 void tail_wiggle(uint32 ts) {
   if (ts < appendages.tail_ms)
     return;
@@ -185,12 +119,8 @@ void tail_wiggle(uint32 ts) {
 }
 
 void setup(){
-  pinMode(PIN, OUTPUT);
-  pinMode(buttonAMBER, INPUT_PULLDOWN);
-  pinMode(buttonGREEN, INPUT_PULLDOWN);
-  pinMode(buttonBLUE, INPUT_PULLDOWN);
-  pinMode(buttonSHELL, INPUT_PULLDOWN);
-
+  setup_turtle_hw();
+  
   tail.attach(7);
   init_all_fires();
 
@@ -203,11 +133,6 @@ void setup(){
   keys.amber_down = false;
   keys.blue_down = false;
   keys.shell_down = false;
-
-  for (int i=0; i<NUMPIXELS; i++) {
-    set_pixel(i, 0);
-  }
-  pixels_dirty = true;
 }
 
 void init_all_fires() {
@@ -253,7 +178,7 @@ void loop() {
   }
 
   if (keys.shell_down && keys.green_down) {
-    *(SCB_AIRCR) = SCB_AIRCR_RESET;
+    reset();
   }
 
   num_fires = constrain(num_fires, 1, 24);
@@ -262,34 +187,4 @@ void loop() {
   draw_pixels();
 
   delay(loop_delay_ms);
-}
-
-// convert HSL color to a RGB
-uint32 HSL2RGB(float hue, float saturation, float lightness) {
-  uint32 r, g, b;
-  float q, p;
-
-  if (saturation == 0.0f)
-    r = g = b = uint32(lightness * 255.0f);
-  else {
-    if (lightness < 0.5f)
-      q = lightness * (1.0f + saturation);
-    else
-      q = lightness + saturation - (lightness * saturation);
-    p = 2.0f * lightness - q;
-    r = HueToRgb(p, q, hue + 1.0f / 3.0f);
-    g = HueToRgb(p, q, hue);
-    b = HueToRgb(p, q, hue - 1.0f / 3.0f);
-  }
-
-  return (r << 16) + (g << 8) + b;
-}
-
-uint32 HueToRgb(float p, float q, float t) {
-  if (t < 0.0f) t += 1.0f;
-  if (t > 1.0f) t -= 1.0f;
-  if (t < 1.0f / 6.0f) return uint32((p + (q - p) * 6.0f * t) * 255.0f);
-  if (t < 1.0f / 2.0f) return uint32(q);
-  if (t < 2.0f / 3.0f) return uint32((p + (q - p) * (2.0f / 3.0f - t) * 6.0f) * 255.0f);
-  return uint32(p * 255.0f);
 }

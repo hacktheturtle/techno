@@ -81,6 +81,12 @@ To access it from my computer I use *screen*
 Then anytime my code runs ~SerialUSB.println("string here");~ You
 will see a line of text in your screen session.
 
+* turtle hardware
+
+** neopixels
+
+pixel values are GRB
+
 * Open Questions
 
 ** TODO Using unix toolchain

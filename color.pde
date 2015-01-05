@@ -1,5 +1,3 @@
-#include "color.h"
-
 // convert HSL color to a RGB
 uint32 HSL2RGB(float hue, float saturation, float lightness) {
     uint32 r, g, b;
